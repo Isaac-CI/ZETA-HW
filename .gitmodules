@@ -1,0 +1,3 @@
+[submodule "ZETA-releases"]
+	path = ZETA-releases
+	url = https://github.com/Guiraffo/ZETA-releases.git
