@@ -1,0 +1,88 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\bibliographystyle{IEEEtran}
+
+\title{ZETA-RNG}
+\author{\IEEEauthorblockN{1\textsuperscript{st} Isaac Nóbrega Marinho}
+\IEEEauthorblockA{\textit{Programa de Pós-graduação em Engenharia Elétrica} \\
+\textit{Universidade Federal de Minas Gerais}\\
+Belo horizonte, Brasil \\
+isaacnmarinho@gmail.com}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd}Juan Camillo Pabon Meneses}
+\IEEEauthorblockA{\textit{Programa de Pós-graduação em Engenharia Elétrica} \\
+\textit{Universidade Federal de Minas Gerais}\\
+Belo horizonte, Brasil \\
+email address or ORCID}
+}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+placeholder
+\end{abstract}
+
+\begin{IEEEkeywords}
+Chaotic systems, Set-valued State Estimation, Zonotopes, Hardware implementation
+\end{IEEEkeywords}
+
+\section{Introduction}\label{AA}
+
+Chaotic systems are dynamical systems that exhibit extreme sensitivity to initial conditions, where small differences in the initial conditions can lead to significantly divergent outcomes over time. Although they are deterministic, outlined by well-defined mathematical equations, their long-term behavior is unpredictable due to the complexity of their trajectories in state space. These characteristics are coveted in a plethora of applications such as cryptography, pseudo-random number generation, and the modeling of complex phenomena.
+
+However, whenever such systems are implemented computationally or in digital hardware, issues may arise. Given the fact that the digital representation of a chaotic system is inevitably finite, limiting the system's state space, which in turn leads to the gradual degradation of chaotic properties, a process commonly known as chaos degradation.
+
+In the present work, a new approach to mitigate chaos degradation in digital chaotic maps through a feedback control system that estimates the next state of such systems, considering that they are bound by geometric shapes. This research will begin with the hardware implementation of a method for set-valued state estimation based on constrained zonotopes, a specific type of hypercube that allows for a more efficient conservative state estimation.
+
+\section{Related works}
+
+\section{Proposed Architecture}
+
+The proposed architecture builds upon the extensions to enclose all the next possible system states in a constrained zonotope as proposed in \cite{REGO2020108614}. It consists of enclosing the prediction and update steps of the prediction-update algorithm for state estimation inside constrained zonotopes, obtained by applying either the mean value extension or the first-order Taylor extension proposed by Rego et al.
+
+In layman's terms, the prediction-update algorithm for state estimation, that will be henceforth referred to as estimator, consists of calculating two non-linear function images in specific sets. 
+The image $\bar{X}_k$ of the previous state set $ \hat{X}_{k-1} $ and the disturbance set $ W_{k-1} $ given a fixed input $ u_{k-1}$  through the system dynamics function $f$, known as the prediction step; and the inverse image $\hat{X}_{k}$ of the predicted set $\bar{X}_k$, obtained with the prediction step, through the system dynamics function $f$, retrieving all predicted states $x$ that are consistent with the measurement $y_k$ considering all possible measurement errors in $V_k$, known as the update step. The following equations define the prediction and the update steps respectively.
+
+\begin{equation}
+    \bar{X}_k \supseteq \{f(x, u_{k-1}, w) : x \in \hat{X}_{k-1}, w \in W_{k-1} \}
+\end{equation}
+\begin{equation}
+    \hat{X}_{k} \supseteq \{x \in \bar{X}_k : Cx + D_uu_k + D_vv = y_k, v \in V_k\}
+\end{equation}
+
+Note that depending on the system dynamics function $f$, it may not be feasible to calculate the prediction and update steps analytically. Considering that, both extensions proposed by Rego et al. are powerful tools to obtain conservative interval enclosures for the system's state space.
+
+%The mean value extension of a nonlinear function $\mu$ receiving uncertain inputs described as constrained zonotopes consists of the enclosing of the possible function outputs within another constrained zonotope using a combination of sample evaluation and linear expansion.
+
+
+Whilst the first-order Taylor extension is beyond the scope of this article, the mean value extension provides a new method to propagate convex polytopes through non-linear mappings implicitly. 
+
+Put simply, it consists of choosing a center point $h$ from inside the constrained zonotope $X$ that encapsulate the possible states, then computing how the function behaves when only varying the disturbance $w$, holding $x=h, x \in X$, subsequently adding the resulting constrained zonotope $Z$ to the linear expansion $\lhd(J, X)$ of how $\mu$ changes with $x$ defined in \cite{REGO2020108614}. The following equations contain the formal definition of the mean value extension.
+\begin{equation}
+    \mu(X,W) \subseteq Z \oplus \lhd(J, X)
+\end{equation}
+Where $\mu(h, W) \subseteq Z$ and $\bigtriangledown_x^T\mu(X,W) \subseteq J$.
+
+%% Inserir paragrafos explicando mais a fundo a matematica do método
+
+In order to scrutinize where the hardware implementation of the proposed method can be of use, the tools of the ZETA toolbox \cite{Rego2025ZETA} that calculate what is needed to implement the described state estimator were profiled.
+
+%% Inserir aqui paragrafo sobre profiling 
+
+%% Inserir paragrafo concluindo a sessão
+
+\section{Results and discussion}
+
+\section{Conclusion}
+
+\bibliography{refs}
+
+\end{document}
