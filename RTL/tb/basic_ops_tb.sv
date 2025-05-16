@@ -6,6 +6,7 @@ module basic_ops_tb;
   parameter NMAX_TB     = 10; // Reduzido para simulação mais rápida
   parameter NGMAX_TB    = 5;
   parameter NCMAX_TB    = 3;
+  parameter NRMAX_TB    = 10;
 
   logic clk_tb;
   logic rst_tb;
@@ -32,15 +33,40 @@ module basic_ops_tb;
     .NCMAX(2)  // OUT.nc = Z.nc + W.nc
   ) OUT_plus ();
 
+  CZonotope #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .NMAX(2),
+    .NGMAX(3),
+    .NCMAX(1)
+  ) OUT_image ();
+
+  linear_transform #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .NMAX(2),
+    .NRMAX(2)
+  ) R ();
+
   plus #(
     .NMAX(NMAX_TB)
-  ) dut (
+  ) ZW (
     .clk_i(clk_tb),
     .rstn_i(rst_tb),
     .Z(Z),
     .W(W),
     .OUT(OUT_plus),
     .valid(valid_tb)
+  );
+
+  linear_image #(
+    .NMAX(NMAX_TB),
+    .NGMAX(NGMAX_TB),
+    .NRMAX(NRMAX_TB)
+  ) RZ (
+    .clk_i(clk_tb),
+    .rstn_i(rst_tb),
+    .R(R),
+    .Z(Z),
+    .OUT(OUT_image)
   );
 
   // gera clock
@@ -83,13 +109,19 @@ module basic_ops_tb;
     // Initialize constraints for W
     W.A[0][0] = 32'h3e4ccccd; W.A[0][1] = 32'h3e4ccccd;
     W.b[0]    = 32'h3f800000;
-    
+
+    // Initialize R
+    R.n  = 2;
+    R.nr = 2;
+    R.mat[0][0] = 32'h3f800000; R.mat[0][1] = 32'h00000000; // 1.0 0.0
+    R.mat[1][0] = 32'h00000000; R.mat[1][1] = 32'h40000000; // 0.0 2.0
+
     // Reset the DUT
     #10 rst_tb = 0;
     #10 rst_tb = 1;
 
     // Simulate for a few clock cycles
-    repeat (NMAX_TB + 5) @(posedge clk_tb);
+    repeat (100) @(posedge clk_tb);
 
     // Display the output Zonotope
     $display("--- Output Zonotope (OUT) ---");

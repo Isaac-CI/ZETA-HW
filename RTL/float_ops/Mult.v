@@ -44,7 +44,7 @@ assign product_normalised = normalised ? product : product << 1;	//Assigning Nor
 //Final Manitssa.
 assign product_mantissa = product_normalised[46:24] + (product_normalised[23] & product_round); 
 
-assign zero = Exception ? 1'b0 : (product_mantissa == 23'd0) ? 1'b1 : 1'b0;
+assign zero = (a[30:0] == 31'b0 | b[30:0] == 31'b0);
 
 assign sum_exponent = a[30:23] + b[30:23];
 
