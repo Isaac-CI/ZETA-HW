@@ -40,6 +40,13 @@ module basic_ops_tb;
     .NCMAX(1)
   ) OUT_image ();
 
+  CZonotope #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .NMAX(2),
+    .NGMAX(5), // OUT.ng = Z.ng + Y.ng
+    .NCMAX(4)  // OUT.nc = Z.nc + Y.nc + R.nr
+  ) OUT_intersect ();
+
   linear_transform #(
     .DATA_WIDTH(DATA_WIDTH_TB),
     .NMAX(2),
@@ -67,6 +74,20 @@ module basic_ops_tb;
     .R(R),
     .Z(Z),
     .OUT(OUT_image)
+  );
+
+  intersection #(
+    .NMAX(NMAX_TB),
+    .NGMAX(NGMAX_TB),
+    .NCMAX(NCMAX_TB),
+    .NRMAX(NRMAX_TB)
+  ) ZnY (
+    .clk_i(clk_tb),
+    .rstn_i(rst_tb),
+    .R(R),
+    .Z(Z),
+    .Y(W),
+    .OUT(OUT_intersect)
   );
 
   // gera clock

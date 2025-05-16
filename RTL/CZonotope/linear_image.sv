@@ -79,10 +79,13 @@ module linear_image #(
     OUT.G[itrr][itrg] = (itrn == Z.n-1) ? s_rowg_sum : OUT.G[itrr][itrg];
 
     /* OUT.A = Z.A*/
-    OUT.A = Z.A;
+    for(int i = 0; i < Z.nc; i++)
+      for(int j = 0; j < Z.ng; j++)
+        OUT.A[i][j] = Z.A[i][j];
 
     /* OUT.b = Z.b*/
-    OUT.b = Z.b;
+    for(int i = 0; i < Z.nc; i++)
+      OUT.b[i] = Z.b[i];
   end
 
 endmodule
