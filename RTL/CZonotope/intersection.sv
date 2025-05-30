@@ -22,7 +22,7 @@ module intersection #(
   
   CZonotope #(
     .DATA_WIDTH(DATA_WIDTH),
-    .NMAX(NMAX),
+    .NMAX(NRMAX),
     .NGMAX(NGMAX),
     .NCMAX(NCMAX)
   ) RZ ();
@@ -63,49 +63,66 @@ module intersection #(
     OUT.nc = Z.nc + Y.nc + R.nr;
 
     /* OUT.c = Z.c */
-    for(int i = 0; i < Z.n; i++)
-      OUT.c[i] = Z.c[i];
+    for(int i = 0; i < NMAX; i++)
+      if(i < Z.n)
+        OUT.c[i] = Z.c[i];
+      else
+        OUT.c[i] = '0;
     
     /* OUT.G = [Z.G zeroes(size(Z.G,1),size(Y.G,2))] */
-    for(int i = 0; i < Z.n; i++) begin
-      for(int j = 0; j < Z.ng; j++)
-        OUT.G[i][j] = Z.G[i][j];
-      for(int j = 0; j < Y.ng; j++)
-        OUT.G[i][j+Z.ng] = Y.G[i][j];
-    end
+    for(int i = 0; i < NMAX; i++)
+      if(i < Z.n)
+        for(int j = 0; j < NGMAX; j++)
+          if(j < Z.ng)
+            OUT.G[i][j] = Z.G[i][j];
+          else if((j - Z.ng) < Y.ng)
+            OUT.G[i][j] = Y.G[i][j-Z.ng];
+          else
+            OUT.G[i][j] = '0;
+      else
+        for(int j = 0; j < NGMAX; j++)
+          OUT.G[i][j] = '0;
 
     /* OUT.A = [Z.A, zeroes(size(Z.A,1),size(Y.A,2));
                 zeros(size(Y.A,1), size(Z.A,2)), Y.A;
                 R*Z.G, -Y.G]*/
-    for(int i = 0; i < Z.nc; i++) begin
-      for(int j = 0; j < Z.ng; j++)
-        OUT.A[i][j] = Z.A[i][j];
-      for(int j = 0; j < Y.ng; j++)
-        OUT.A[i][j+Z.ng] = '0;
-    end
-
-    for(int i = 0; i < Y.nc; i++) begin
-      for(int j = 0; j < Z.ng; j++)
-        OUT.A[i+Z.nc][j] = '0;
-      for(int j = 0; j < Y.ng; j++)
-        OUT.A[i+Z.nc][j+Z.ng] = Y.A[i][j];
-    end
-
-    for(int i = 0; i < R.nr; i++) begin
-      for(int j = 0; j < RZ.ng; i++)
-        OUT.A[i+Z.nc+Y.nc][j] = RZ.G[i][j];
-      for(int j = 0; j < Y.ng; j++)
-        OUT.A[i+Z.nc+Y.nc][j+RZ.ng] = {1'b1, RZ.G[i][j][DATA_WIDTH-2:0]};
-    end
+    for(int i = 0; i < NCMAX; i++)
+      if(i < Z.nc)
+        for(int j = 0; j < NGMAX; j++)
+          if(j < Z.ng)
+            OUT.A[i][j] = Z.A[i][j];
+          else
+            OUT.A[i][j] = '0;
+      else if((i - Z.nc) < Y.nc)
+        for(int j = 0; j < NGMAX; j++)
+          if(j < Z.ng)
+            OUT.A[i][j] = '0;
+          else if((j - Z.ng) < Y.ng)
+            OUT.A[i][j] = Y.A[i-Z.nc][j-Z.ng];
+          else
+            OUT.A[i][j] = '0;
+      else if((i - Z.nc - Y.nc) < R.nr)
+        for(int j = 0; j < NGMAX; j++)
+          if(j < RZ.ng)
+            OUT.A[i][j] = RZ.G[(i - Z.nc - Y.nc)][j];
+          else if((j - RZ.ng) < Y.ng)
+            OUT.A[i][j] = {1'b1, Y.G[(i - Z.nc - Y.nc)][j-RZ.ng][DATA_WIDTH-2:0]};
+          else
+            OUT.A[i][j] = '0;
+      else
+        for(int j = 0; j < NGMAX; j++)
+          OUT.A[i][j] = '0;
 
     /* OUT.b = [Z.b; Y.b; Y.c-R*Z.c]*/
-    for(int i = 0 ; i < Z.nc; i++) begin
-      OUT.b[i] = Z.b[i];
-    end
-    for(int i = 0 ; i < Y.nc; i++) begin
-      OUT.b[i+Z.nc] = Y.b[i];
-    end
-      OUT.b[itrr+Z.nc+Y.nc] = s_sub;
+    for(int i = 0; i < NCMAX; i++)
+      if(i < Z.nc)
+        OUT.b[i] = Z.b[i];
+      else if((i - Z.nc) < Y.nc)
+        OUT.b[i] = Y.b[i-Z.nc];
+      else if((i - Z.nc - Y.nc) < R.nr)
+        OUT.b[i] = ((i - Z.nc - Y.nc) == itrr) ? s_sub : OUT.b[i];
+      else
+        OUT.b[i] = '0;
   end
 
 endmodule

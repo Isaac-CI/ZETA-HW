@@ -1,6 +1,7 @@
 module linear_image #(
   parameter NMAX  = 512,
   parameter NGMAX = 512,
+  parameter NCMAX = 512,  
   parameter NRMAX = 512,  
   parameter DATA_WIDTH = 32
 ) (
@@ -73,19 +74,49 @@ module linear_image #(
     OUT.nc = Z.nc;
 
     /* R.mat*Z.c -> R.nr*Z.n clock cycles*/
-    OUT.c[itrr] = (itrn == Z.n-1) ? s_rowc_sum : OUT.c[itrr];
+    for(int i = 0; i < NRMAX; i++)
+      if(i < R.nr)
+        OUT.c[i] = (i == itrr) ? ((itrn == Z.n-1) ? s_rowc_sum : OUT.c[i]) : OUT.c[i];
+      else
+        OUT.c[i] = '0;
     
     /* R.mat*Z.G -> R.nr*Z.n*Z.ng clock cycles*/
-    OUT.G[itrr][itrg] = (itrn == Z.n-1) ? s_rowg_sum : OUT.G[itrr][itrg];
+    for(int i = 0; i < NRMAX; i++)
+    begin
+      if(i < R.nr)
+      begin
+        for(int j = 0; j < NGMAX; j++)
+        begin
+          if(j < Z.ng)
+            OUT.G[i][j] = (i == itrr) ? ((j == itrg) ? ((itrn == Z.n-1) ? s_rowg_sum : OUT.G[i][j]) : OUT.G[i][j]) : OUT.G[i][j];
+          else
+            OUT.G[i][j] = '0;
+        end
+      end
+      else
+        for(int j = 0; j < NGMAX; j++)
+          OUT.G[i][j] = '0;
+    end
+    //OUT.G[itrr][itrg] = (itrn == Z.n-1) ? s_rowg_sum : OUT.G[itrr][itrg];
 
     /* OUT.A = Z.A*/
-    for(int i = 0; i < Z.nc; i++)
-      for(int j = 0; j < Z.ng; j++)
-        OUT.A[i][j] = Z.A[i][j];
+    for(int i = 0; i < NCMAX; i++)
+      if(i < Z.nc)
+        for(int j = 0; j < NGMAX; j++)
+          if(j < Z.ng)
+            OUT.A[i][j] = Z.A[i][j];
+          else
+            OUT.A[i][j] = '0;
+      else
+        for(int j = 0; j < NGMAX; j++)
+          OUT.A[i][j] = '0;
 
     /* OUT.b = Z.b*/
-    for(int i = 0; i < Z.nc; i++)
-      OUT.b[i] = Z.b[i];
+    for(int i = 0; i < NCMAX; i++)
+      if(i < Z.nc)
+        OUT.b[i] = Z.b[i];
+      else
+        OUT.b[i] = '0;
   end
 
 endmodule

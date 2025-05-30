@@ -1,5 +1,7 @@
 module plus #(
   parameter NMAX  = 512,
+  parameter NGMAX = 512,
+  parameter NCMAX = 512,
   parameter DATA_WIDTH = 32
 ) (
   input clk_i,
@@ -37,35 +39,72 @@ module plus #(
     OUT.nc = Z.nc + W.nc;
 
     /* Z.c + W.c -> OUT.n clock cycles*/
-    OUT.c[itrn] = sum;
+    for(int i = 0; i < NMAX; i++)
+      if(i < Z.n)
+        OUT.c[i] = (i == itrn)? sum : OUT.c[i];
+      else
+        OUT.c[i] = '0;
 
     /* [Z.G, W.G] */
-    for(int i = 0; i < OUT.n; i++) begin
-      for(int j = 0; j < Z.ng; j++)
-        OUT.G[i][j] = Z.G[i][j];
-      for(int j = 0; j < W.ng; j++)
-        OUT.G[i][j+Z.ng] = W.G[i][j];
+    for(int i = 0; i < NMAX; i++) begin
+      if(i < OUT.n)
+      begin
+        for(int j = 0; j < NGMAX; j++)
+        begin
+          if(j < Z.ng)
+            OUT.G[i][j] = Z.G[i][j];
+          else if((j - Z.ng) < W.ng)
+            OUT.G[i][j] = W.G[i][j - Z.ng];
+          else
+            OUT.G[i][j] = '0;
+        end
+      end
+      else
+      begin
+        for(int j = 0; j < NGMAX; j++)
+          OUT.G[i][j] = '0;
+      end
     end
 
     /* blkdiag(Z.A, W.A) */
-    for(int i = 0; i < Z.nc; i++) begin
-      for(int j = 0; j < Z.ng; j++)
-        OUT.A[i][j] = Z.A[i][j];
-      for(int j = 0; j < W.ng; j++)
-        OUT.A[i][j+Z.ng] = '0;
-    end
-    for(int i = 0; i < W.nc; i++) begin
-      for(int j = 0; j < Z.ng; j++)
-        OUT.A[i+Z.nc][j] = '0;
-      for(int j = 0; j < W.ng; j++)
-        OUT.A[i+Z.nc][j+Z.ng] = W.A[i][j];
+    for(int i = 0; i < NCMAX; i++) begin
+      if(i < Z.nc)
+      begin
+        for(int j = 0; j < NGMAX; j++)
+        begin
+          if(j < Z.ng)
+            OUT.A[i][j] = Z.A[i][j];
+          else
+            OUT.A[i][j] = '0;
+        end
+      end
+      else if((i - Z.nc) < W.nc)
+      begin
+        for(int j = 0; j < NGMAX; j++)
+        begin
+          if(j < Z.ng)
+            OUT.A[i][j] = '0;
+          else if((j - Z.ng) < W.ng)
+            OUT.A[i][j] = W.A[i-Z.nc][j-Z.ng];
+          else
+            OUT.A[i][j] = '0;
+        end
+      end
+      else
+      begin
+        for(int j = 0; j < NGMAX; j++)
+          OUT.A[i][j] = '0;
+      end
     end
 
     /* [Z.b; W.b] */
-    for(int i = 0; i < Z.nc; i++)
-      OUT.b[i] = Z.b[i];
-    for(int i = 0; i < W.nc; i++)
-      OUT.b[i+Z.nc] = W.b[i];
+    for(int i = 0; i < NCMAX; i++)
+      if(i < Z.nc)
+        OUT.b[i] = Z.b[i];
+      else if((i - Z.nc) < W.nc)
+        OUT.b[i] = W.b[i-Z.nc];
+      else
+        OUT.b[i] = '0;
 
   end
 

@@ -14,47 +14,50 @@ module basic_ops_tb;
 
   CZonotope #(
     .DATA_WIDTH(DATA_WIDTH_TB),
-    .NMAX(2),
-    .NGMAX(3),
-    .NCMAX(1)
+    .NMAX(NMAX_TB),
+    .NGMAX(NGMAX_TB),
+    .NCMAX(NCMAX_TB)
   ) Z ();
 
   CZonotope #(
     .DATA_WIDTH(DATA_WIDTH_TB),
-    .NMAX(2),
-    .NGMAX(2),
-    .NCMAX(1)
+    .NMAX(NMAX_TB),
+    .NGMAX(NGMAX_TB),
+    .NCMAX(NCMAX_TB)
   ) W ();
 
   CZonotope #(
     .DATA_WIDTH(DATA_WIDTH_TB),
-    .NMAX(2),
-    .NGMAX(5), // OUT.ng = Z.ng + W.ng
-    .NCMAX(2)  // OUT.nc = Z.nc + W.nc
+    .NMAX(NMAX_TB),
+    .NGMAX(2*NGMAX_TB), // OUT.ng = Z.ng + W.ng
+    .NCMAX(2*NCMAX_TB)  // OUT.nc = Z.nc + W.nc
   ) OUT_plus ();
 
   CZonotope #(
     .DATA_WIDTH(DATA_WIDTH_TB),
-    .NMAX(2),
-    .NGMAX(3),
-    .NCMAX(1)
+    .NMAX(NRMAX_TB),
+    .NGMAX(NGMAX_TB),
+    .NCMAX(NCMAX_TB)
   ) OUT_image ();
 
   CZonotope #(
     .DATA_WIDTH(DATA_WIDTH_TB),
-    .NMAX(2),
-    .NGMAX(5), // OUT.ng = Z.ng + Y.ng
-    .NCMAX(4)  // OUT.nc = Z.nc + Y.nc + R.nr
+    .NMAX(NMAX_TB),
+    .NGMAX(2*NGMAX_TB), // OUT.ng = Z.ng + Y.ng
+    .NCMAX((2*NCMAX_TB)+NRMAX_TB)  // OUT.nc = Z.nc + Y.nc + R.nr
   ) OUT_intersect ();
 
   linear_transform #(
     .DATA_WIDTH(DATA_WIDTH_TB),
-    .NMAX(2),
-    .NRMAX(2)
+    .NMAX(NMAX_TB),
+    .NRMAX(NRMAX_TB)
   ) R ();
 
   plus #(
-    .NMAX(NMAX_TB)
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .NMAX(NMAX_TB),
+    .NGMAX(2*NGMAX_TB),
+    .NCMAX(2*NCMAX_TB)
   ) ZW (
     .clk_i(clk_tb),
     .rstn_i(rst_tb),
@@ -78,8 +81,8 @@ module basic_ops_tb;
 
   intersection #(
     .NMAX(NMAX_TB),
-    .NGMAX(NGMAX_TB),
-    .NCMAX(NCMAX_TB),
+    .NGMAX(2*NGMAX_TB),
+    .NCMAX((2*NCMAX_TB)+NRMAX_TB),
     .NRMAX(NRMAX_TB)
   ) ZnY (
     .clk_i(clk_tb),
@@ -135,7 +138,7 @@ module basic_ops_tb;
     R.n  = 2;
     R.nr = 2;
     R.mat[0][0] = 32'h3f800000; R.mat[0][1] = 32'h00000000; // 1.0 0.0
-    R.mat[1][0] = 32'h00000000; R.mat[1][1] = 32'h40000000; // 0.0 2.0
+    R.mat[1][0] = 32'h00000000; R.mat[1][1] = 32'h3e4ccccd; // 0.0 0.2
 
     // Reset the DUT
     #10 rst_tb = 0;
