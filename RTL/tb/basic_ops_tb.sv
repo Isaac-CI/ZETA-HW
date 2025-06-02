@@ -56,8 +56,8 @@ module basic_ops_tb;
   plus #(
     .DATA_WIDTH(DATA_WIDTH_TB),
     .NMAX(NMAX_TB),
-    .NGMAX(2*NGMAX_TB),
-    .NCMAX(2*NCMAX_TB)
+    .NGMAX(2*NGMAX_TB), // Z.ng + W.ng
+    .NCMAX(2*NCMAX_TB)  // Z.nc + W.nc
   ) ZW (
     .clk_i(clk_tb),
     .rstn_i(rst_tb),
@@ -70,6 +70,7 @@ module basic_ops_tb;
   linear_image #(
     .NMAX(NMAX_TB),
     .NGMAX(NGMAX_TB),
+    .NCMAX(NCMAX_TB),
     .NRMAX(NRMAX_TB)
   ) RZ (
     .clk_i(clk_tb),
@@ -81,8 +82,8 @@ module basic_ops_tb;
 
   intersection #(
     .NMAX(NMAX_TB),
-    .NGMAX(2*NGMAX_TB),
-    .NCMAX((2*NCMAX_TB)+NRMAX_TB),
+    .NGMAX(2*NGMAX_TB), // Z.ng + Y.ng
+    .NCMAX((2*NCMAX_TB)+NRMAX_TB), // Z.nc + Y.nc + R.nr
     .NRMAX(NRMAX_TB)
   ) ZnY (
     .clk_i(clk_tb),
