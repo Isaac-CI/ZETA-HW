@@ -3,8 +3,8 @@ module simplex #(
   parameter NCOEFMAX = 512,
   parameter NREQMAX = 512,
   parameter NRLEQMAX = 512,
-  parameter NROWS = NREQMAX+NRLEQMAX,
-  parameter NCOLS = NCOEFMAX+NRLEQMAX+1
+  parameter NROWS = (2*NREQMAX)+NRLEQMAX,
+  parameter NCOLS = NCOEFMAX+NRLEQMAX+(2*NREQMAX)+1
 ) (
   
   input logic clk_i,
@@ -87,7 +87,7 @@ module simplex #(
 
   
   div i_div_pivot(
-    .a(tableau[r_curr_row][ncoef+nrleq+1]),
+    .a(tableau[r_curr_row][ncoef+nrleq+(2*nreq)+1]),
     .b(tableau[r_curr_row][r_pivot_col]),
     .result(s_curr_row_value)
   );
@@ -112,7 +112,7 @@ module simplex #(
   );
 
   assign s_search_row_en = (state == FIND_PIVOT);
-  assign s_pivot_found = (s_search_row_en && r_curr_row == (nreq+nrleq));
+  assign s_pivot_found = (s_search_row_en && r_curr_row == ((2*nreq)+nrleq));
   assign s_update_en = (state == PIVOT_OPERATION);
   assign s_update_finished = r_update_finished;
 
@@ -127,21 +127,21 @@ module simplex #(
     end
     else if(s_update_en) // se está realizando a operação de pivotagem
     begin
-      if(r_update_col == ncoef+nrleq+1 || r_update_col == NCOLS) // se a coluna de update for a ultima, volta para primeira coluna e atualiza a linha de update
+      if(r_update_col == ncoef+nrleq+(2*nreq)+1 || r_update_col == NCOLS) // se a coluna de update for a ultima, volta para primeira coluna e atualiza a linha de update
       begin
         if(!r_pivot_en)
           r_factor <= tableau[r_update_row][r_pivot_col];
         r_update_col <= 1;
         if(r_pivot_en)
         begin
-          if(r_update_row >= NROWS || r_update_row >= nreq+nrleq)
+          if(r_update_row >= NROWS || r_update_row >= (2*nreq)+nrleq)
           begin
             r_update_row <= '0;
             r_update_finished <= 1'b1;
           end
           else
             if(r_update_row+1 == r_pivot_row) // se a proxima linha for a linha do pivo
-              if(r_update_row+1 == nreq+nrleq) // pula a linha do pivo, retornando para a primeira linha caso ela seja a ultima
+              if(r_update_row+1 == (2*nreq)+nrleq) // pula a linha do pivo, retornando para a primeira linha caso ela seja a ultima
               begin
                 r_update_row <= '0;
                 r_update_finished <= 1'b1;
@@ -208,7 +208,7 @@ module simplex #(
   end
   
   always_comb begin : proc_pivot_row_comb
-    s_next_row = (r_curr_row == (nreq+nrleq)) ? 1 : r_curr_row + 1;
+    s_next_row = (r_curr_row == ((2*nreq)+nrleq)) ? 1 : r_curr_row + 1;
     s_min_row_value = r_min_row_value;
     s_pivot_row = r_pivot_row;
     if(s_search_row_en) // se está procurando o pivo
@@ -292,7 +292,6 @@ module simplex #(
             else
               tableau[0][j] = '0;
 
-
           for(int i = 0; i < NROWS; i++) // tableau inicial
           begin
             if(i < nrleq) // restrições de desigualdade
@@ -306,21 +305,39 @@ module simplex #(
                     tableau[i+1][j+1] <= 32'h3F800000;
                   else
                     tableau[i+1][j+1] <= '0;
-                else if(j == (ncoef+nrleq)) // RHS
+                else if((j-ncoef-nrleq) < (2*nreq))
+                  tableau[i+1][j+1] <= '0;
+                else if(j == (ncoef+nrleq+(2*nreq))) // RHS
                   tableau[i+1][j+1] <= bleq[i];
                 else // padding
                   tableau[i+1][j+1] <= '0;
               end      
             end
-            else if((i-nrleq) < nreq) // restrições de igualdade
+            else if((i-nrleq) < nreq) // restrições de igualdade diretas
             begin
               for(int j = 0; j < NCOLS; j++)
                 if(j < ncoef) // coeficientes das restrições
                   tableau[i+1][j+1] <= Aeq[i-nrleq][j];
                 else if((j-ncoef) < nrleq) // coeficientes das variáveis de slack
                   tableau[i+1][j+1] <= '0;
-                else if(j == (ncoef+nrleq)) // RHS
+                else if((j-ncoef-nrleq) < (2*nreq))
+                  tableau[i+1][j+1] <= ((j-ncoef) == i) ? 32'h3F800000 : '0;
+                else if(j == (ncoef+nrleq+(2*nreq))) // RHS
                   tableau[i+1][j+1] <= beq[i-nrleq];
+                else // padding
+                  tableau[i+1][j+1] <= '0;
+            end
+            else if((i-nrleq-nreq) < nreq) // restrições de igualdade opostas
+            begin
+              for(int j = 0; j < NCOLS; j++)
+                if(j < ncoef) // coeficientes das restrições
+                  tableau[i+1][j+1] <= {!Aeq[i-nrleq-nreq][j][31], Aeq[i-nrleq-nreq][j][30:0]}; // 
+                else if((j-ncoef) < nrleq) // coeficientes das variáveis de slack
+                  tableau[i+1][j+1] <= '0;
+                else if((j-ncoef-nrleq) < (2*nreq))
+                  tableau[i+1][j+1] <= ((j-ncoef) == i) ? 32'h3F800000 : '0;
+                else if(j == (ncoef+nrleq+(2*nreq))) // RHS
+                  tableau[i+1][j+1] <= {!beq[i-nrleq-nreq][31], beq[i-nrleq-nreq][30:0]};
                 else // padding
                   tableau[i+1][j+1] <= '0;
             end
@@ -348,7 +365,7 @@ module simplex #(
           end
           else
           begin
-            if(r_update_col == ncoef+nrleq+1)
+            if(r_update_col == ncoef+nrleq+(2*nreq)+1)
               r_pivot_en <= 1'b1;
             if(!r_pivot_en)
               for(int j = 0; j <= NCOLS; j++)
@@ -372,7 +389,7 @@ module simplex #(
               if(j-1 < ncoef) // verifica apenas coeficientes
               begin
                 if(tableau[i][j] == 32'h3F800000)
-                  sol[j-1] <= tableau[i][ncoef+nrleq+1];
+                  sol[j-1] <= tableau[i][ncoef+nrleq+(2*nreq)+1];
               end
               else if(j < NCOEFMAX)
                 sol[j] <= '0;

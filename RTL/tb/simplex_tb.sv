@@ -5,8 +5,8 @@ module tb_simplex;
   parameter NCOEFMAX   = 2;
   parameter NREQMAX    = 1;
   parameter NRLEQMAX   = 1;
-  parameter NROWS      = NREQMAX + NRLEQMAX;
-  parameter NCOLS      = NCOEFMAX + NRLEQMAX + 1;
+  parameter NROWS      = (2*NREQMAX) + NRLEQMAX;
+  parameter NCOLS      = NCOEFMAX + NRLEQMAX + (2*NREQMAX) + 1;
 
   // Sinais
   logic clk, rst;
