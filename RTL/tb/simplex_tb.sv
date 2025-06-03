@@ -9,7 +9,7 @@ module tb_simplex;
   parameter NCOLS      = NCOEFMAX + NRLEQMAX + (2*NREQMAX) + 1;
 
   // Sinais
-  logic clk, rst;
+  logic clk, rst, start, done;
   logic [DATA_WIDTH-1:0] f      [0:NCOEFMAX-1];
   logic [DATA_WIDTH-1:0] Aleq   [0:NRLEQMAX-1][0:NCOEFMAX-1];
   logic [DATA_WIDTH-1:0] bleq   [0:NRLEQMAX-1];
@@ -31,6 +31,7 @@ module tb_simplex;
   ) dut (
     .clk_i(clk),
     .rstn_i(rstn),
+    .start_i(start),
     .f(f),
     .Aleq(Aleq),
     .bleq(bleq),
@@ -41,7 +42,8 @@ module tb_simplex;
     .nrleq(nrleq),
     .LB(LB),
     .UB(UB),
-    .sol(sol)
+    .sol(sol),
+    .done(done)
   );
 
   // Clock generation
@@ -85,8 +87,10 @@ module tb_simplex;
     LB[0] = 0; UB[0] = 10;
     LB[1] = 0; UB[1] = 10;
 
+    start = 1'b1;
+
     // Esperar para DUT processar
-    #20;
+    #30 start = 1'b0;
 
     // Mostrar a tableau inicial
     $display("\nTableau inicial:");
@@ -97,7 +101,7 @@ module tb_simplex;
       $write("\n");
     end
 
-    #1000;
+    wait(dut.done == 1);
 
     // Fim
     $finish;

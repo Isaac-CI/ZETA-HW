@@ -7,8 +7,9 @@ module simplex #(
   parameter NCOLS = NCOEFMAX+NRLEQMAX+(2*NREQMAX)+1
 ) (
   
-  input logic clk_i,
-  input logic rstn_i,
+  input  logic clk_i,
+  input  logic rstn_i,
+  input  logic start_i,
   input  logic [DATA_WIDTH-1:0]  f    [0:NCOEFMAX-1],
   input  logic [DATA_WIDTH-1:0]  Aleq [0:NRLEQMAX-1][0:NCOEFMAX-1],
   input  logic [DATA_WIDTH-1:0]  bleq [0:NRLEQMAX-1],
@@ -25,7 +26,7 @@ module simplex #(
 
   // Estado do algoritmo
   typedef enum logic [2:0] {
-    INIT, FIND_PIVOT, PIVOT_OPERATION, CHECK_OPTIMAL, DONE
+    IDLE, INIT, FIND_PIVOT, PIVOT_OPERATION, CHECK_OPTIMAL, DONE
   } state_t;
 
   state_t state;
@@ -266,7 +267,7 @@ module simplex #(
     if(!rstn_i)
     begin
       r_pivot_en <= 1'b0;
-      state <= INIT;
+      state <= IDLE;
       for(int i = 0; i < NCOEFMAX; i++)
         sol[i] <= '0;
       for(int i = 0; i <= NROWS; i++)
@@ -276,6 +277,11 @@ module simplex #(
     else
     begin
       case (state)
+        IDLE:
+        begin
+          if(start_i)
+            state <= INIT;
+        end
         INIT:
         begin
           state <= FIND_PIVOT;
@@ -395,13 +401,13 @@ module simplex #(
                 sol[j] <= '0;
             end
           end
-              
+          state <= IDLE;
         end
         default:
         begin
           r_done <= 1'b0;
           r_pivot_en <= 1'b0;
-          state <= INIT;
+          state <= IDLE;
           for(int i = 0; i < NCOEFMAX; i++)
             sol[i] <= '0;
           for(int i = 0; i <= NROWS; i++)
