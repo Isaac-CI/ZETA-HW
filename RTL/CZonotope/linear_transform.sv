@@ -1,7 +1,7 @@
 interface linear_transform #(
   parameter DATA_WIDTH = 32,
-  parameter NMAX  = 512,
-  parameter NRMAX = 512
+  parameter NMAX  = 16,
+  parameter NRMAX = 16
 );
 
 // Dimensões 

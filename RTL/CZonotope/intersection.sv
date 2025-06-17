@@ -1,10 +1,12 @@
 `timescale 1ns/1ps
+`include "CZonotope.sv"
+`include "linear_image.sv"
 
 module intersection #(
-  parameter NMAX  = 512,
-  parameter NGMAX = 512,
-  parameter NCMAX = 512,
-  parameter NRMAX = 512,  
+  parameter NMAX  = 3,
+  parameter NGMAX = 15,
+  parameter NCMAX = 12,
+  parameter NRMAX = 16,  
   parameter DATA_WIDTH = 32
 ) (
   input logic clk_i,
@@ -15,6 +17,8 @@ module intersection #(
   CZonotope OUT,
   output logic valid
 );
+
+  logic [DATA_WIDTH+1:0] Yc, RZc, s_fp_sub;
 
   logic s_valid;
   logic [DATA_WIDTH-1:0] s_sub;
@@ -40,12 +44,28 @@ module intersection #(
     .OUT(RZ)
   );
 
-    Add_Sub i_sub_const(
-    .a(Y.c[itrr]),
-    .b(RZ.c[itrr]),
-    .AddBar_Sub(1'b1),
-    .result(s_sub)
+  InputIEEE_8_23_to_8_23_comb_uid2 i_conv_Yc(
+    .X(Y.c[itrr]),
+    .R(Yc)
   );
+
+  
+  InputIEEE_8_23_to_8_23_comb_uid2 i_conv_RZc(
+    .X(RZ.c[itrr]),
+    .R(RZc)
+  );
+
+  FPSub_8_23_comb_uid17 i_sub_const(
+    .X(Yc),
+    .Y(RZc),
+    .R(s_fp_sub)
+  );
+
+  OutputIEEE_8_23_to_8_23_comb_uid4 i_conv_sub(
+    .X(s_fp_sub),
+    .R(s_sub)
+  );
+
 
   assign valid = (s_valid & Y.n == R.nr);
 

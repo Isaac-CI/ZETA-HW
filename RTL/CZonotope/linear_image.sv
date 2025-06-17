@@ -1,8 +1,11 @@
+`include "linear_transform.sv"
+`include "CZonotope.sv"
+
 module linear_image #(
-  parameter NMAX  = 512,
-  parameter NGMAX = 512,
-  parameter NCMAX = 512,  
-  parameter NRMAX = 512,  
+  parameter NMAX  = 3,
+  parameter NGMAX = 15,
+  parameter NCMAX = 12,  
+  parameter NRMAX = 3,  
   parameter DATA_WIDTH = 32
 ) (
   input logic clk_i,
@@ -17,8 +20,11 @@ module linear_image #(
   logic [$clog2(NRMAX)-1:0] itrr;
   logic [$clog2(NGMAX)-1:0] itrg;
 
-  logic [DATA_WIDTH-1:0] rowc_mult, rowg_mult;
-  logic [DATA_WIDTH-1:0] r_rowc_sum, r_rowg_sum;
+  logic[DATA_WIDTH+1:0] Zc, Rn, Zg; 
+
+  logic [DATA_WIDTH+1:0] fp_rowc_mult, fp_rowg_mult;
+  logic [DATA_WIDTH+1:0] r_fp_rowc_sum, r_fp_rowg_sum;
+  logic [DATA_WIDTH+1:0] s_fp_rowc_sum, s_fp_rowg_sum;
   logic [DATA_WIDTH-1:0] s_rowc_sum, s_rowg_sum;
 
   assign valid = (itrg == (Z.ng-1) & Z.n == R.n);
@@ -34,37 +40,61 @@ module linear_image #(
       itrr <= (itrn == Z.n-1) ? ((itrr < R.nr-1) ? itrr+1 : '0) : itrr;
       itrg <= (itrn == Z.n-1 & itrr == R.nr-1) ? ((itrg < Z.ng-1) ? itrg+1 : '0) : itrg;
 
-      r_rowc_sum <= (itrn < Z.n-1) ? s_rowc_sum : '0;
-      r_rowg_sum <= (itrn < Z.n-1) ? s_rowg_sum : '0;
+      r_fp_rowc_sum <= (itrn < Z.n-1) ? s_fp_rowc_sum : '0;
+      r_fp_rowg_sum <= (itrn < Z.n-1) ? s_fp_rowg_sum : '0;
     end
   end
+
+  
+  InputIEEE_8_23_to_8_23_comb_uid2 i_conv_Zc(
+    .X(Z.c[itrn]),
+    .R(Zc)
+  );
+  
+  InputIEEE_8_23_to_8_23_comb_uid2 i_conv_Rn(
+    .X(R.mat[itrr][itrn]),
+    .R(Rn)
+  );
+  
+  InputIEEE_8_23_to_8_23_comb_uid2 i_conv_Zg(
+    .X(Z.G[itrn][itrg]),
+    .R(Zg)
+  );
   
   /* R.mat*Z.c -> R.nr*Z.n clock cycles*/
-  Mult i_mult_centers(
-    .a(Z.c[itrn]),
-    .b(R.mat[itrr][itrn]),
-    .result(rowc_mult)
+  FPMult_8_23_uid28_comb_uid29 i_mult_centers(
+    .X(Zc),
+    .Y(Rn),
+    .R(fp_rowc_mult) 
   );
 
-  Add_Sub i_add_centers(
-    .a(rowc_mult),
-    .b(r_rowc_sum),
-    .AddBar_Sub(1'b0),
-    .result(s_rowc_sum)
+  FPAdd_8_23_comb_uid6 i_add_centers(
+    .X(fp_rowc_mult),
+    .Y(r_fp_rowc_sum),
+    .R(s_fp_rowc_sum)
+  );
+  
+  OutputIEEE_8_23_to_8_23_comb_uid4 i_conv_add_centers(
+    .X(s_fp_rowc_sum),
+    .R(s_rowc_sum)
   );
 
   /* R.mat*Z.G -> R.nr*Z.n*Z.ng clock cycles*/
-  Mult i_mult_gen(
-    .a(Z.G[itrn][itrg]),
-    .b(R.mat[itrr][itrn]),
-    .result(rowg_mult)
+  FPMult_8_23_uid28_comb_uid29 i_mult_gen(
+    .X(Zg),
+    .Y(Rn),
+    .R(fp_rowg_mult)
   );
 
-  Add_Sub i_add_gen(
-    .a(rowg_mult),
-    .b(r_rowg_sum),
-    .AddBar_Sub(1'b0),
-    .result(s_rowg_sum)
+  FPAdd_8_23_comb_uid6 i_add_gen(
+    .X(fp_rowg_mult),
+    .Y(r_fp_rowg_sum),
+    .R(s_fp_rowg_sum)
+  );
+  
+  OutputIEEE_8_23_to_8_23_comb_uid4 i_conv_add_gen(
+    .X(s_fp_rowg_sum),
+    .R(s_rowg_sum)
   );
 
   always_comb begin : plus
