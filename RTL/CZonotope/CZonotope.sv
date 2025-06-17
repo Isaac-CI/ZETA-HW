@@ -1,8 +1,8 @@
 interface CZonotope #(
   parameter DATA_WIDTH = 32,
-  parameter NMAX  = 512,
-  parameter NGMAX = 512,
-  parameter NCMAX = 512
+  parameter NMAX  = 3,
+  parameter NGMAX = 15,
+  parameter NCMAX = 12
 );
 
 // Dimensões 
@@ -15,5 +15,13 @@ logic [DATA_WIDTH-1:0] c [0:NMAX-1];
 logic [DATA_WIDTH-1:0] G [0:NMAX-1][0:NGMAX-1];
 logic [DATA_WIDTH-1:0] A [0:NCMAX-1][0:NGMAX-1];
 logic [DATA_WIDTH-1:0] b [0:NCMAX-1];
+
+modport in (
+  input n, ng, nc, c, G, A, b
+);
+
+modport out (
+  output n, ng, nc, c, G, A, b
+);
 
 endinterface //CZonotope
