@@ -15,10 +15,14 @@ module basic_ops_tb;
   logic s_done;
   logic [DATA_WIDTH_TB-1:0] Zeta [0:NGMAX_TB][0:1];
 
+  logic [$clog2(NMAX_TB)-1:0] Zn, Wn, plusn;    
+  logic [$clog2(NCMAX_TB)-1:0] Znc, Wnc, plusnc;
+  logic [$clog2(NGMAX_TB)-1:0] Zng, Wng, plusng;
+
   logic Zc_we, ZG_we, ZA_we, Zb_we, Wc_we, WG_we, WA_we, Wb_we, plusc_we, plusG_we, plusA_we, plusb_we;
-  logic [$clog2(NMAX_TB):0] Zc_addr, ZG_raddr, Wc_addr, WG_raddr, plusc_addr, plusG_raddr;
-  logic [$clog2(NCMAX_TB):0] ZA_raddr, Zb_addr, WA_raddr, Wb_addr, plusA_raddr, plusb_addr;
-  logic [$clog2(NGMAX_TB):0] ZG_caddr, ZA_caddr, WG_caddr, WA_caddr, plusG_caddr, plusA_caddr;
+  logic [$clog2(NMAX_TB)-1:0] Zc_addr, ZG_raddr, Wc_addr, WG_raddr, plusc_addr, plusG_raddr;
+  logic [$clog2(NCMAX_TB)-1:0] ZA_raddr, Zb_addr, WA_raddr, Wb_addr, plusA_raddr, plusb_addr;
+  logic [$clog2(NGMAX_TB)-1:0] ZG_caddr, ZA_caddr, WG_caddr, WA_caddr, plusG_caddr, plusA_caddr;
   logic [DATA_WIDTH_TB-1:0] Zc_rdata, ZG_rdata, ZA_rdata, Zb_rdata, Wc_rdata, WG_rdata, WA_rdata, Wb_rdata, plusc_wdata, plusG_wdata, plusA_wdata, plusb_wdata;
 
     block_ram_1d #(
@@ -215,11 +219,24 @@ module basic_ops_tb;
   plus #(
     .DATA_WIDTH(DATA_WIDTH_TB),
     .NMAX(NMAX_TB),
-    .NGMAX(2*NGMAX_TB), // Z.ng + W.ng
-    .NCMAX(2*NCMAX_TB)  // Z.nc + W.nc
+    .NGMAX(NGMAX_TB),
+    .NCMAX(NCMAX_TB)
   ) ZW (
     .clk_i(clk_tb),
     .rstn_i(rst_tb),
+
+    .Zn(Zn),
+    .Wn(Wn),
+    .OUTn(plusn),
+
+    .Znc(Znc),
+    .Wnc(Wnc),
+    .OUTnc(plusnc),
+
+    .Zng(Zng),
+    .Wng(Wng),
+    .OUTng(plusng),
+
     .Zc_addr(Zc_addr),
     .Zc_rdata(Zc_rdata),
     .ZG_raddr(ZG_raddr),
@@ -256,9 +273,6 @@ module basic_ops_tb;
     .OUTb_we(plusb_we),
     .OUTb_addr(plusb_addr),
     .OUTb_wdata(plusb_wdata),
-    .Z(Z),
-    .W(W),
-    .OUT(OUT_plus),
     .valid(valid_tb)
   );
 
@@ -301,11 +315,17 @@ module basic_ops_tb;
 
     // Initialize Zonotopes Z and W
     Z.n  = 2;
+    Zn   = 2;
     Z.ng = 3;
+    Zng  = 3;
     Z.nc = 1;
+    Znc  = 1;
     W.n  = 2;
+    Wn   = 2;
     W.ng = 2;
+    Wng  = 2;
     W.nc = 1;
+    Wnc  = 1;
 
     // Initialize centers for Z
     Z.c[0] = 32'h40a00000; // 5.0
