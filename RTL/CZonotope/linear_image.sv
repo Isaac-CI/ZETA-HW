@@ -159,7 +159,7 @@ module linear_image #(
     .R(s_rowg_sum)
   );
 
-  always_comb begin : plus
+  always_comb begin : set_dimensions
     // Dimensões de OUT
     OUT.n  = R.nr;
     OUT.ng = Z.ng;

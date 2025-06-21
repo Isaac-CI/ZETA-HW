@@ -135,7 +135,7 @@ module plus #(
     .R(sum)
   );
 
-  always_comb begin : plus
+  always_comb begin : set_dimensions
     // Dimensões de OUT
     OUT.n  = (Z.n == W.n) ? Z.n : '0;
     OUT.ng = Z.ng + W.ng;
