@@ -10,8 +10,7 @@ module plus #(
   input rstn_i,
 
   // dims
-  input  logic [$clog2(NMAX)-1:0] Zn, Wn,
-  output logic [$clog2(NMAX)-1:0] OUTn,
+  input  logic [$clog2(NMAX)-1:0] Zn, Wn, OUTn,
   input  logic [$clog2(NCMAX)-1:0] Znc, Wnc,
   output logic [$clog2(NCMAX)-1:0] OUTnc,
   input  logic [$clog2(NGMAX)-1:0] Zng, Wng,
@@ -53,27 +52,26 @@ module plus #(
   output logic [$clog2(NCMAX)-1:0] Wb_addr,
   input  logic [DATA_WIDTH-1:0]  Wb_rdata,
 
-  
   // OUT_center
   output logic OUTc_we,
-  output logic [$clog2(NMAX):0] OUTc_addr,
+  output logic [$clog2(NMAX)-1:0] OUTc_addr,
   output logic [DATA_WIDTH-1:0] OUTc_wdata,
   
   // OUT_generator
   output logic OUTG_we,
-  output logic [$clog2(NMAX):0]  OUTG_raddr,
-  output logic [$clog2(NGMAX):0] OUTG_caddr,
+  output logic [$clog2(NMAX)-1:0]  OUTG_raddr,
+  output logic [$clog2(NGMAX)-1:0] OUTG_caddr,
   output logic [DATA_WIDTH-1:0]  OUTG_wdata,
   
   // OUTA
   output logic OUTA_we,
-  output logic [$clog2(NCMAX):0] OUTA_raddr,
-  output logic [$clog2(NGMAX):0] OUTA_caddr,
+  output logic [$clog2(NCMAX)-1:0] OUTA_raddr,
+  output logic [$clog2(NGMAX)-1:0] OUTA_caddr,
   output logic [DATA_WIDTH-1:0]  OUTA_wdata,
 
   // OUTb
   output logic OUTb_we,
-  output logic [$clog2(NCMAX):0] OUTb_addr,
+  output logic [$clog2(NCMAX)-1:0] OUTb_addr,
   output logic [DATA_WIDTH-1:0]  OUTb_wdata,
 
   output logic valid
@@ -95,12 +93,21 @@ module plus #(
   logic [DATA_WIDTH+1:0] fpsum;
   logic [DATA_WIDTH-1:0] sum;
 
-  assign valid = (r_itrn == (Zn-1) & ~itrn & Zn == Wn);
+  logic gen_done, res_done;
+  logic done;
+  logic r_done;
+
+  assign done = gen_done && res_done;
+  assign valid = r_done;
   
-  assign OUTc_we = 1'b1;
-  assign OUTG_we = 1'b1;
-  assign OUTA_we = 1'b1;
-  assign OUTb_we = 1'b1;
+  assign  OUTn  = (Zn == Wn) ? Zn : '0;
+  assign  OUTng = Zng + Wng;
+  assign  OUTnc = Znc + Wnc;
+  
+  assign OUTc_we = !r_done;
+  assign OUTG_we = !r_done;
+  assign OUTA_we = !r_done;
+  assign OUTb_we = !r_done;
 
   assign Zc_addr = itrn;
   assign Wc_addr = itrn;
@@ -112,8 +119,8 @@ module plus #(
   
   assign ZA_raddr = (itrc < Znc) ? itrc : '0;
   assign WA_raddr = (itrc >= Znc && itrc-Znc < Wnc) ? itrc-Znc : 0;
-  assign ZA_caddr = (itrg < Zng) ? itrg : '0;
-  assign WA_caddr = (itrg >= Zng && itrg-Zng < Wng) ? itrg-Zng : '0;
+  assign ZA_caddr = (itra < Zng) ? itra : '0;
+  assign WA_caddr = (itra >= Zng && itra-Zng < Wng) ? itra-Zng : '0;
   
   assign Zb_addr = (itrc < Znc) ? itrc : '0;
   assign Wb_addr = (itrc >= Znc && itrc-Znc < Wnc) ? itrc-Znc : '0;
@@ -143,17 +150,29 @@ module plus #(
       r_itrc <= '0;
       itra <= '0;
       r_itra <= '0;
+      gen_done <= 1'b0;
+      res_done <= 1'b0;
+      r_done <= 1'b0;
     end
     else
     begin
-      itrn <= (itrn < Zn-1) ? itrn + 1 : '0;
-      r_itrn <= itrn;
-      itrg <= (itrn == Zn-1) ? ((itrg < (Zng+Wng-1)) ? itrg + 1 : '0) : itrg;
-      r_itrg <= itrg;
-      itrc <= (itrc < (Znc+Wnc-1)) ? itrc + 1 : '0;
-      r_itrc <= itrc;
-      itra <= (itrc == Znc+Wnc-1) ? ((itra < (Zng+Wng-1)) ? itra + 1 : '0) : itrg;
-      r_itra <= itra;
+      if(!gen_done)
+      begin
+        itrn <= (itrn < Zn-1) ? itrn + 1 : '0;
+        r_itrn <= itrn;
+        itrg <= (itrn == Zn-1) ? ((itrg < (Zng+Wng-1)) ? itrg + 1 : '0) : itrg;
+        r_itrg <= itrg;
+        gen_done <= (r_itrg < Zng+Wng-1) ? 1'b0 : 1'b1;
+      end
+      if(!res_done)
+      begin
+        itrc <= (itrc < (Znc+Wnc-1)) ? itrc + 1 : '0;
+        r_itrc <= itrc;
+        itra <= (itrc == Znc+Wnc-1) ? ((itra < (Zng+Wng-1)) ? itra + 1 : '0) : itra;
+        r_itra <= itra;
+        res_done <= (r_itra < Zng+Wng-1) ? 1'b0 : 1'b1;
+      end
+      r_done <= done;
     end
   end
 
@@ -178,9 +197,4 @@ module plus #(
     .X(fpsum),
     .R(sum)
   );
-
-  assign  OUTn  = (Zn == Wn) ? Zn : '0;
-  assign  OUTng = Zng + Wng;
-  assign  OUTnc = Znc + Wnc;
-
 endmodule

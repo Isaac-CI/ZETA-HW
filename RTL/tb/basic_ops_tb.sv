@@ -15,7 +15,9 @@ module basic_ops_tb;
   logic s_done;
   logic [DATA_WIDTH_TB-1:0] Zeta [0:NGMAX_TB][0:1];
 
-  logic [$clog2(NMAX_TB)-1:0] Zn, Wn, plusn;    
+  // Acesso a memória para a operação de soma
+  
+  logic [$clog2(NMAX_TB)-1:0]  Zn, Wn, plusn;    
   logic [$clog2(NCMAX_TB)-1:0] Znc, Wnc, plusnc;
   logic [$clog2(NGMAX_TB)-1:0] Zng, Wng, plusng;
 
@@ -25,17 +27,30 @@ module basic_ops_tb;
   logic [$clog2(NGMAX_TB)-1:0] ZG_caddr, ZA_caddr, WG_caddr, WA_caddr, plusG_caddr, plusA_caddr;
   logic [DATA_WIDTH_TB-1:0] Zc_rdata, ZG_rdata, ZA_rdata, Zb_rdata, Wc_rdata, WG_rdata, WA_rdata, Wb_rdata, plusc_wdata, plusG_wdata, plusA_wdata, plusb_wdata;
 
-    block_ram_1d #(
+  // Acesso a memória para a operação de imagem linear
+  
+  logic [$clog2(NMAX_TB)-1:0]  Zimgn, Rimgn;    
+  logic [$clog2(NCMAX_TB)-1:0] Zimgnc, imgnc;
+  logic [$clog2(NGMAX_TB)-1:0] Zimgng, imgng;
+  logic [$clog2(NRMAX_TB)-1:0] Rimgnr, imgn;
+
+  logic imgc_we, imgG_we, imgA_we, imgb_we;
+  logic [$clog2(NMAX_TB)-1:0] Zimgc_addr, ZimgG_raddr, Rimg_caddr;
+  logic [$clog2(NCMAX_TB)-1:0] ZimgA_raddr, Zimgb_addr, imgA_raddr, imgb_addr;
+  logic [$clog2(NGMAX_TB)-1:0] ZimgG_caddr, ZimgA_caddr, imgG_caddr, imgA_caddr;
+  logic [$clog2(NRMAX_TB)-1:0] Rimg_raddr, imgc_addr, imgG_raddr;
+  logic [DATA_WIDTH_TB-1:0] Zimgc_rdata, ZimgG_rdata, ZimgA_rdata, Zimgb_rdata, Rimg_rdata, imgc_wdata, imgG_wdata, imgA_wdata, imgb_wdata;
+
+  block_ram_1d #(
     .DATA_WIDTH(DATA_WIDTH_TB),
     .ADDR_WIDTH($clog2(NMAX_TB))
   ) i_Zc (
     .clk(clk_tb),
-    .we(Zc_we),
+    .we(1'b0),
     .addr(Zc_addr),
     .wdata(),
     .rdata(Zc_rdata)
   );
-
   
   block_ram_2d #(
     .DATA_WIDTH(DATA_WIDTH_TB),
@@ -43,13 +58,12 @@ module basic_ops_tb;
     .COL_ADDR_WIDTH($clog2(NGMAX_TB))
   ) i_ZG (
     .clk(clk_tb),
-    .we(ZG_we),
+    .we(1'b0),
     .raddr(ZG_raddr),
     .caddr(ZG_caddr),
     .wdata(),
     .rdata(ZG_rdata)
   );
-
   
   block_ram_2d #(
     .DATA_WIDTH(DATA_WIDTH_TB),
@@ -57,7 +71,7 @@ module basic_ops_tb;
     .COL_ADDR_WIDTH($clog2(NGMAX_TB))
   ) i_ZA (
     .clk(clk_tb),
-    .we(ZA_we),
+    .we(1'b0),
     .raddr(ZA_raddr),
     .caddr(ZA_caddr),
     .wdata(),
@@ -69,7 +83,7 @@ module basic_ops_tb;
     .ADDR_WIDTH($clog2(NCMAX_TB))
   ) i_Zb (
     .clk(clk_tb),
-    .we(Zb_we),
+    .we(1'b0),
     .addr(Zb_addr),
     .wdata(),
     .rdata(Zb_rdata)
@@ -80,34 +94,32 @@ module basic_ops_tb;
     .ADDR_WIDTH($clog2(NMAX_TB))
   ) i_Wc (
     .clk(clk_tb),
-    .we(Wc_we),
+    .we(1'b0),
     .addr(Wc_addr),
     .wdata(),
     .rdata(Wc_rdata)
   );
 
-  
   block_ram_2d #(
     .DATA_WIDTH(DATA_WIDTH_TB),
     .ROW_ADDR_WIDTH($clog2(NMAX_TB)),
     .COL_ADDR_WIDTH($clog2(NGMAX_TB))
   ) i_WG (
     .clk(clk_tb),
-    .we(WG_we),
+    .we(1'b0),
     .raddr(WG_raddr),
     .caddr(WG_caddr),
     .wdata(),
     .rdata(WG_rdata)
   );
 
-  
   block_ram_2d #(
     .DATA_WIDTH(DATA_WIDTH_TB),
     .ROW_ADDR_WIDTH($clog2(NCMAX_TB)),
     .COL_ADDR_WIDTH($clog2(NGMAX_TB))
   ) i_WA (
     .clk(clk_tb),
-    .we(WA_we),
+    .we(1'b0),
     .raddr(WA_raddr),
     .caddr(WA_caddr),
     .wdata(),
@@ -119,7 +131,7 @@ module basic_ops_tb;
     .ADDR_WIDTH($clog2(NCMAX_TB))
   ) i_Wb (
     .clk(clk_tb),
-    .we(Wb_we),
+    .we(1'b0),
     .addr(Wb_addr),
     .wdata(),
     .rdata(Wb_rdata)
@@ -172,6 +184,115 @@ module basic_ops_tb;
     .we(plusb_we),
     .addr(plusb_addr),
     .wdata(plusb_wdata),
+    .rdata()
+  );
+
+  block_ram_1d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ADDR_WIDTH($clog2(NMAX_TB))
+  ) i_Zimgc (
+    .clk(clk_tb),
+    .we(1'b0),
+    .addr(Zimgc_addr),
+    .wdata(),
+    .rdata(Zimgc_rdata)
+  );
+  
+  block_ram_2d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ROW_ADDR_WIDTH($clog2(NMAX_TB)),
+    .COL_ADDR_WIDTH($clog2(NGMAX_TB))
+  ) i_ZimgG (
+    .clk(clk_tb),
+    .we(1'b0),
+    .raddr(ZimgG_raddr),
+    .caddr(ZimgG_caddr),
+    .wdata(),
+    .rdata(ZimgG_rdata)
+  );
+  
+  block_ram_2d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ROW_ADDR_WIDTH($clog2(NCMAX_TB)),
+    .COL_ADDR_WIDTH($clog2(NGMAX_TB))
+  ) i_ZimgA (
+    .clk(clk_tb),
+    .we(1'b0),
+    .raddr(ZimgA_raddr),
+    .caddr(ZimgA_caddr),
+    .wdata(),
+    .rdata(ZimgA_rdata)
+  );
+
+  block_ram_1d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ADDR_WIDTH($clog2(NCMAX_TB))
+  ) i_Zimgb (
+    .clk(clk_tb),
+    .we(1'b0),
+    .addr(Zimgb_addr),
+    .wdata(),
+    .rdata(Zimgb_rdata)
+  );
+  
+  block_ram_2d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ROW_ADDR_WIDTH($clog2(NRMAX_TB)),
+    .COL_ADDR_WIDTH($clog2(NMAX_TB))
+  ) i_imgR (
+    .clk(clk_tb),
+    .we(1'b0),
+    .raddr(Rimg_raddr),
+    .caddr(Rimg_caddr),
+    .wdata(),
+    .rdata(Rimg_rdata)
+  );
+  
+  block_ram_1d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ADDR_WIDTH($clog2(NRMAX_TB))
+  ) i_imgc (
+    .clk(clk_tb),
+    .we(imgc_we),
+    .addr(imgc_addr),
+    .wdata(imgc_wdata),
+    .rdata()
+  );
+  
+  block_ram_2d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ROW_ADDR_WIDTH($clog2(NRMAX_TB)),
+    .COL_ADDR_WIDTH($clog2(NGMAX_TB))
+  ) i_imgG (
+    .clk(clk_tb),
+    .we(imgG_we),
+    .raddr(imgG_raddr),
+    .caddr(imgG_caddr),
+    .wdata(imgG_wdata),
+    .rdata()
+  );
+  
+  block_ram_2d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ROW_ADDR_WIDTH($clog2(NCMAX_TB)),
+    .COL_ADDR_WIDTH($clog2(NGMAX_TB))
+  ) i_imgA (
+    .clk(clk_tb),
+    .we(imgA_we),
+    .raddr(imgA_raddr),
+    .caddr(imgA_caddr),
+    .wdata(imgA_wdata),
+    .rdata()
+  );
+  
+  block_ram_1d #(
+    .DATA_WIDTH(DATA_WIDTH_TB),
+    .ADDR_WIDTH($clog2(NCMAX_TB))
+  ) i_imgb (
+    .clk(clk_tb),
+    .we(imgb_we),
+    .addr(imgb_addr),
+    .wdata(imgb_wdata),
     .rdata()
   );
 
@@ -284,25 +405,63 @@ module basic_ops_tb;
   ) RZ (
     .clk_i(clk_tb),
     .rstn_i(rst_tb),
-    .R(R),
-    .Z(Z),
-    .OUT(OUT_image),
+    
+    .Zn(Zimgn),
+    .Rn(Rimgn),
+    .Rnr(Rimgnr),
+    .OUTn(imgn),
+
+    .Znc(Zimgnc),
+    .OUTnc(imgnc),
+
+    .Zng(Zimgng),
+    .OUTng(imgng),
+
+    .Zc_addr(Zimgc_addr),
+    .Zc_rdata(Zimgc_rdata),
+    .ZG_raddr(ZimgG_raddr),
+    .ZG_caddr(ZimgG_caddr),
+    .ZG_rdata(ZimgG_rdata),
+    .ZA_raddr(ZimgA_raddr),
+    .ZA_caddr(ZimgA_caddr),
+    .ZA_rdata(ZimgA_rdata),
+    .Zb_addr(Zimgb_addr),
+    .Zb_rdata(Zimgb_rdata),
+
+    .R_raddr(Rimg_raddr),
+    .R_caddr(Rimg_caddr),
+    .R_rdata(Rimg_rdata),
+    
+    .OUTc_we(imgc_we),
+    .OUTc_addr(imgc_addr),
+    .OUTc_wdata(imgc_wdata),
+    .OUTG_we(imgG_we),
+    .OUTG_raddr(imgG_raddr),
+    .OUTG_caddr(imgG_caddr),
+    .OUTG_wdata(imgG_wdata),
+    .OUTA_we(imgA_we),
+    .OUTA_raddr(imgA_raddr),
+    .OUTA_caddr(imgA_caddr),
+    .OUTA_wdata(imgA_wdata),
+    .OUTb_we(imgb_we),
+    .OUTb_addr(imgb_addr),
+    .OUTb_wdata(imgb_wdata),
     .valid(s_done)
   );
 
-  intersection #(
-    .NMAX(NMAX_TB),
-    .NGMAX(2*NGMAX_TB), // Z.ng + Y.ng
-    .NCMAX((2*NCMAX_TB)+NRMAX_TB), // Z.nc + Y.nc + R.nr
-    .NRMAX(NRMAX_TB)
-  ) ZnY (
-    .clk_i(clk_tb),
-    .rstn_i(rst_tb),
-    .R(R),
-    .Z(Z),
-    .Y(W),
-    .OUT(OUT_intersect)
-  );
+  // intersection #(
+  //   .NMAX(NMAX_TB),
+  //   .NGMAX(2*NGMAX_TB), // Z.ng + Y.ng
+  //   .NCMAX((2*NCMAX_TB)+NRMAX_TB), // Z.nc + Y.nc + R.nr
+  //   .NRMAX(NRMAX_TB)
+  // ) ZnY (
+  //   .clk_i(clk_tb),
+  //   .rstn_i(rst_tb),
+  //   .R(R),
+  //   .Z(Z),
+  //   .Y(W),
+  //   .OUT(OUT_intersect)
+  // );
 
   // gera clock
   initial begin
@@ -315,11 +474,14 @@ module basic_ops_tb;
 
     // Initialize Zonotopes Z and W
     Z.n  = 2;
-    Zn   = 2;
+    Zn    = 2;
+    Zimgn = 2;
     Z.ng = 3;
     Zng  = 3;
+    Zimgng  = 3;
     Z.nc = 1;
     Znc  = 1;
+    Zimgnc  = 1;
     W.n  = 2;
     Wn   = 2;
     W.ng = 2;
@@ -337,6 +499,11 @@ module basic_ops_tb;
     i_Zc.mem[1] = 32'h3f000000; // 0.5
     for(int i = 2; i < $pow(2, $clog2(NMAX_TB)); i++)
       i_Zc.mem[i] = '0;
+      
+    i_Zimgc.mem[0] = 32'h40a00000; // 5.0
+    i_Zimgc.mem[1] = 32'h3f000000; // 0.5
+    for(int i = 2; i < $pow(2, $clog2(NMAX_TB)); i++)
+      i_Zimgc.mem[i] = '0;
 
     // Initialize generators for Z
     Z.G[0][0] = 32'h3f000000; Z.G[0][1] = 32'h3f800000; Z.G[0][2] =  32'hbf000000; // 0.5 1.0 -0.5
@@ -358,6 +525,16 @@ module basic_ops_tb;
     begin
      i_ZG.mem[0][i] = '0;
      i_ZG.mem[1][i] = '0;
+    end
+    i_ZimgG.mem[0][0] = 32'h3f000000;i_ZimgG.mem[0][1] = 32'h3f800000;i_ZimgG.mem[0][2] =  32'hbf000000; // 0.5 1.0 -0.5
+    i_ZimgG.mem[1][0] = 32'h3f000000;i_ZimgG.mem[1][1] = 32'h3f000000;i_ZimgG.mem[1][2] =  32'h00000000; // 0.5 0.5 0
+    for(int i = 2; i < $pow(2, $clog2(NMAX_TB)); i++)
+      for(int j = 0; j <= $pow(2, $clog2(NGMAX_TB)); j++)
+       i_ZimgG.mem[i][j] = '0;
+    for(int i = 3; i < $pow(2, $clog2(NGMAX_TB)); i++)
+    begin
+     i_ZimgG.mem[0][i] = '0;
+     i_ZimgG.mem[1][i] = '0;
     end
 
     // Initialize constraints for Z
@@ -382,6 +559,18 @@ module basic_ops_tb;
     end
     for(int i = 3; i < $pow(2, $clog2(NGMAX_TB)); i++)
       i_ZA.mem[0][i] = '0;
+
+    // Initialize constraints for Z
+    i_ZimgA.mem[0][0] = 32'h3f000000; i_ZimgA.mem[0][1] = 32'h3f800000; i_ZimgA.mem[0][2] =  32'hbf000000; // 0.5 1.0 -0.5
+    i_Zimgb.mem[0]    = 32'h3f800000;
+    for(int i = 1; i < $pow(2, $clog2(NCMAX_TB)); i++)
+    begin
+      i_Zimgb.mem[i] = '0;
+      for(int j = 0; j < $pow(2, $clog2(NGMAX_TB)); j++)
+        i_ZimgA.mem[i][j] = '0;
+    end
+    for(int i = 3; i < $pow(2, $clog2(NGMAX_TB)); i++)
+      i_ZimgA.mem[0][i] = '0;
 
     // Initialize centers for W
     W.c[0] = 32'h3fA66666;
@@ -442,7 +631,9 @@ module basic_ops_tb;
 
     // Initialize R
     R.n  = 2;
+    Rimgn = 2;
     R.nr = 2;
+    Rimgnr = 2;
     R.mat[0][0] = 32'h3f800000; R.mat[0][1] = 32'h00000000; // 1.0 0.0
     R.mat[1][0] = 32'h00000000; R.mat[1][1] = 32'h3e4ccccd; // 0.0 0.2
     for(int i = 2; i < NRMAX_TB; i++)
@@ -452,6 +643,17 @@ module basic_ops_tb;
     begin
       R.mat[0][i] = '0;
       R.mat[1][i] = '0;
+    end
+    
+    i_imgR.mem[0][0] = 32'h3f800000; i_imgR.mem[0][1] = 32'h00000000; // 1.0 0.0
+    i_imgR.mem[1][0] = 32'h00000000; i_imgR.mem[1][1] = 32'h3e4ccccd; // 0.0 0.2
+    for(int i = 2; i < NRMAX_TB; i++)
+      for(int j = 0; j < NMAX_TB; j++)
+        i_imgR.mem[i][j] = '0;
+    for(int i = 2; i < NMAX_TB; i++)
+    begin
+      i_imgR.mem[0][i] = '0;
+      i_imgR.mem[1][i] = '0;
     end
 
     // Reset the DUT
