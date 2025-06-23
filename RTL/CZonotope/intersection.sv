@@ -222,12 +222,12 @@ module intersection #(
   );
   
   /* OUT.c = Z.c*/
-  assign OUTc_we = s_valid;
+  assign OUTc_we = s_valid && !r_done;
   assign OUTc_addr = r_itrn;
   assign OUTc_wdata = (r_itrn < Zn) ? Zc_rdata : '0;
 
   /* OUT.G = [Z.G zeroes(size(Z.G,1),size(Y.G,2))] */
-  assign OUTG_we = s_valid;
+  assign OUTG_we = s_valid && !r_done;
   assign OUTG_raddr = r_itrn;
   assign OUTG_caddr = r_itrg;
   assign OUTG_wdata = (r_itrg < Zng) ? ZG_rdata : '0;
@@ -235,13 +235,13 @@ module intersection #(
   /* OUT.A = [Z.A, zeroes(size(Z.A,1),size(Y.A,2));
              zeros(size(Y.A,1), size(Z.A,2)), Y.A;
              R*Z.G, -Y.G]*/
-  assign OUTA_we = s_valid;
+  assign OUTA_we = s_valid && !r_done;
   assign OUTA_raddr = r_itrc;
   assign OUTA_caddr = r_itra;
   assign OUTA_wdata = (r_itrc < Znc) ? ((r_itra < Zng) ? ZA_rdata : '0) : ((r_itrc-Znc<Ync) ? ((r_itra<Zng) ? '0 : YA_rdata) : ((r_itrc-Znc-Ync<Rnr) ? ((r_itra<Zng) ? RZG_rdata : {!YG_rdata[DATA_WIDTH-1],YG_rdata[DATA_WIDTH-2:0]}) : '0));
   
   /* OUT.b = [Z.b; Y.b; Y.c-R*Z.c]*/
-  assign OUTb_we = s_valid;
+  assign OUTb_we = s_valid && !r_done;
   assign OUTb_addr = r_itrc;
   assign OUTb_wdata = (r_itrc < Znc) ? Zb_rdata : ((r_itrc-Znc<Ync) ? Yb_rdata : ((r_itrc-Znc-Ync<Rnr) ? s_sub : '0));
 

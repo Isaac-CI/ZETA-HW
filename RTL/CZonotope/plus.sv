@@ -10,7 +10,8 @@ module plus #(
   input rstn_i,
 
   // dims
-  input  logic [$clog2(NMAX)-1:0] Zn, Wn, OUTn,
+  input  logic [$clog2(NMAX)-1:0] Zn, Wn,
+  output logic [$clog2(NMAX)-1:0] OUTn,
   input  logic [$clog2(NCMAX)-1:0] Znc, Wnc,
   output logic [$clog2(NCMAX)-1:0] OUTnc,
   input  logic [$clog2(NGMAX)-1:0] Zng, Wng,
