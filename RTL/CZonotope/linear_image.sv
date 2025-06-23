@@ -45,24 +45,24 @@ module linear_image #(
   
   // OUT_center
   output logic OUTc_we,
-  output logic [$clog2(NRMAX):0] OUTc_addr,
+  output logic [$clog2(NRMAX)-1:0] OUTc_addr,
   output logic [DATA_WIDTH-1:0] OUTc_wdata,
   
   // OUT_generator
   output logic OUTG_we,
-  output logic [$clog2(NRMAX):0]  OUTG_raddr,
-  output logic [$clog2(NGMAX):0] OUTG_caddr,
+  output logic [$clog2(NRMAX)-1:0]  OUTG_raddr,
+  output logic [$clog2(NGMAX)-1:0] OUTG_caddr,
   output logic [DATA_WIDTH-1:0]  OUTG_wdata,
   
   // OUTA
   output logic OUTA_we,
-  output logic [$clog2(NCMAX):0] OUTA_raddr,
-  output logic [$clog2(NGMAX):0] OUTA_caddr,
+  output logic [$clog2(NCMAX)-1:0] OUTA_raddr,
+  output logic [$clog2(NGMAX)-1:0] OUTA_caddr,
   output logic [DATA_WIDTH-1:0]  OUTA_wdata,
 
   // OUTb
   output logic OUTb_we,
-  output logic [$clog2(NCMAX):0] OUTb_addr,
+  output logic [$clog2(NCMAX)-1:0] OUTb_addr,
   output logic [DATA_WIDTH-1:0]  OUTb_wdata,
   output logic valid
 );
@@ -107,24 +107,24 @@ module linear_image #(
   assign R_caddr = itrn;
 
   /* R.mat*Z.c -> R.nr*Z.n clock cycles*/
-  assign OUTc_we = (r_itrn == Zn-1);
+  assign OUTc_we = (r_itrn == Zn-1 && !r_done);
   assign OUTc_addr = r_itrr;
   assign OUTc_wdata = s_rowc_sum;
   
   /* R.mat*Z.G -> R.nr*Z.n*Z.ng clock cycles*/
-  assign OUTG_we = (r_itrn == Zn-1);
+  assign OUTG_we = (r_itrn == Zn-1 && !r_done);
   assign OUTG_raddr = r_itrr;
   assign OUTG_caddr = r_itrg;
   assign OUTG_wdata = s_rowg_sum;
   
   /* OUT.A = Z.A*/
-  assign OUTA_we = 1'b1;
+  assign OUTA_we = !r_done;
   assign OUTA_raddr = r_itrc;
   assign OUTA_caddr = r_itra;
   assign OUTA_wdata = (r_itrc < Znc) ? ((r_itra < Zng) ? ZA_rdata : '0) : '0;
   
   /* OUT.b = Z.b*/
-  assign OUTb_we = 1'b1;
+  assign OUTb_we = !r_done;
   assign OUTb_addr = r_itrc;
   assign OUTb_wdata = (r_itrc < Znc) ? Zb_rdata : '0;
 
